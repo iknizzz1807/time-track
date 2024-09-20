@@ -1,0 +1,5 @@
+app
+- giao diện: 
++ những hành động đã được tạo, bấm start để track thêm
++ giao diện của mỗi hành động: Thời gian, nút start, nút pause, thời gian tổng đã tích luỹ, thời gian đang tích luỹ. * Lưu ý cùng một lúc chỉ được start thời gian của một hành động.
++ ghi nhận lịch sử track, ví dụ ngày nào track bao nhiêu lần vào khoảng thời gian, hành động nào, thời gian bắt đầu, kết thúc mỗi lần track.(để trực quan hoá bằng chart)
