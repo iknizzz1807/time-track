@@ -25,7 +25,7 @@ function NavBar(props) {
           <button
             style={{
               "font-size": "16px",
-              color: "#8076B0",
+              color: props.currentNav === "Activities" ? "black" : "#8076B0",
               width: "80px",
               "text-align": "center",
               padding: "8px",
@@ -45,7 +45,7 @@ function NavBar(props) {
           <button
             style={{
               "font-size": "16px",
-              color: "#8076B0",
+              color: props.currentNav === "Chart" ? "black" : "#8076B0",
               width: "80px",
               "text-align": "center",
               padding: "8px",

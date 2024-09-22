@@ -50,7 +50,7 @@ function Activity(props) {
         "background-color": "#1b232e",
         "justify-content": "space-between",
         "align-items": "center",
-        padding: "20px",
+        padding: "16px",
       }}
     >
       <div style={{ display: "flex", "flex-direction": "column" }}>
@@ -82,7 +82,8 @@ function Activity(props) {
             style={{
               "font-size": "20px",
               "background-color": "lightgreen",
-              cursor: "pointer",
+              cursor:
+                isActive() || props.isAnyTimerRunning() ? "default" : "pointer",
             }}
             onClick={startTimer}
             disabled={isActive() || props.isAnyTimerRunning()}
@@ -93,7 +94,7 @@ function Activity(props) {
             style={{
               "font-size": "20px",
               "background-color": "lightcoral",
-              cursor: "pointer",
+              cursor: !isActive() ? "default" : "pointer",
             }}
             onClick={stopTimer}
             disabled={!isActive()}

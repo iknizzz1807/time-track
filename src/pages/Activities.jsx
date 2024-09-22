@@ -1,4 +1,5 @@
 import Activity from "../components/Activity";
+import CreateActivityButton from "../components/CreateActivityButton";
 import { For } from "solid-js/web";
 import { createSignal } from "solid-js";
 
@@ -19,7 +20,8 @@ function Activities() {
       totalTimeSecond: 12,
     },
     // Add more items as needed
-  ]); // Simulate the list of activities
+  ]);
+  // Simulate the list of activities
   const [runningTimerId, setRunningTimerId] = createSignal(null);
   const isAnyTimerRunning = () => runningTimerId() !== null;
 
@@ -32,13 +34,23 @@ function Activities() {
   };
   return (
     <div>
-      <h1
+      <div
         style={{
-          color: "#F1F0FB",
+          display: "flex",
+          "flex-direction": "row",
+          "justify-content": "space-between",
         }}
       >
-        Activities
-      </h1>
+        <h1
+          style={{
+            color: "#F1F0FB",
+          }}
+        >
+          Activities
+        </h1>
+
+        <CreateActivityButton />
+      </div>
       <div
         style={{
           display: "flex",
