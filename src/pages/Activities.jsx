@@ -1,5 +1,5 @@
 import Activity from "../components/Activity";
-import CreateActivityButton from "../components/CreateActivityButton";
+import CreateActivity from "../components/CreateActivity";
 import { For } from "solid-js/web";
 import { createSignal } from "solid-js";
 
@@ -49,7 +49,7 @@ function Activities() {
           Activities
         </h1>
 
-        <CreateActivityButton />
+        <CreateActivity />
       </div>
       <div
         style={{
