@@ -3,9 +3,8 @@ import { createSignal } from "solid-js";
 import Activities from "./pages/Activities";
 import Chart from "./pages/Chart";
 
-const [nav, setNav] = createSignal("Activities");
-
 function App() {
+  const [nav, setNav] = createSignal("Activities");
   return (
     <>
       <NavBar currentNav={nav()} onNavChange={setNav} />

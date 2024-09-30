@@ -2,28 +2,39 @@ import Activity from "../components/Activity";
 import CreateActivity from "../components/CreateActivity";
 import { For } from "solid-js/web";
 import { createSignal } from "solid-js";
+import { createResource } from "solid-js";
+
+const fetchActivities = async () => {
+  const response = await fetch("http://localhost:8080/activities");
+  if (!response.ok) {
+    throw new Error("Failed to fetch activities");
+  }
+  const data = await response.json();
+  return data.map((activity) => {
+    const { hours, minutes, seconds } = convertSecondsToHMS(activity.time);
+    return {
+      id: activity.id,
+      name: activity.name,
+      totalTimeHour: hours,
+      totalTimeMinute: minutes,
+      totalTimeSecond: seconds,
+    };
+  });
+};
+
+const convertSecondsToHMS = (totalSeconds) => {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = (totalSeconds % 3600) % 60;
+  return { hours, minutes, seconds };
+};
 
 function Activities() {
-  const [items, setItems] = createSignal([
-    {
-      id: 1,
-      name: "Coding",
-      totalTimeHour: 1,
-      totalTimeMinute: 32,
-      totalTimeSecond: 43,
-    },
-    {
-      id: 2,
-      name: "Reading",
-      totalTimeHour: 0,
-      totalTimeMinute: 45,
-      totalTimeSecond: 12,
-    },
-    // Add more items as needed
-  ]);
+  const [activities, { mutate }] = createResource(fetchActivities);
   // Simulate the list of activities
   const [runningTimerId, setRunningTimerId] = createSignal(null);
   const isAnyTimerRunning = () => runningTimerId() !== null;
+  let activitiesContainerRef;
 
   const handleTimerStart = (id) => {
     setRunningTimerId(id);
@@ -32,6 +43,23 @@ function Activities() {
   const handleTimerStop = () => {
     setRunningTimerId(null);
   };
+
+  const handleActivityCreated = (newActivity) => {
+    const { hours, minutes, seconds } = convertSecondsToHMS(newActivity.time);
+    const formattedActivity = {
+      id: newActivity.id,
+      name: newActivity.name,
+      totalTimeHour: hours,
+      totalTimeMinute: minutes,
+      totalTimeSecond: seconds,
+    };
+    mutate((prev) => [...prev, formattedActivity]);
+    // Scroll to the bottom of the activities container
+    setTimeout(() => {
+      activitiesContainerRef.scrollTop = activitiesContainerRef.scrollHeight;
+    }, 0);
+  };
+
   return (
     <div>
       <div
@@ -49,9 +77,10 @@ function Activities() {
           Activities
         </h1>
 
-        <CreateActivity />
+        <CreateActivity onActivityCreated={handleActivityCreated} />
       </div>
       <div
+        ref={activitiesContainerRef}
         style={{
           display: "flex",
           gap: "8px",
@@ -62,7 +91,7 @@ function Activities() {
           "-ms-overflow-style": "none",
         }}
       >
-        <For each={items()}>
+        <For each={activities()}>
           {(item) => (
             <Activity
               id={item.id}

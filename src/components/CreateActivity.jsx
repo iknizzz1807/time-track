@@ -1,7 +1,9 @@
 import { createSignal, onCleanup } from "solid-js";
 
-function CreateActivity() {
+function CreateActivity({ onActivityCreated }) {
   const [dropDownState, setDropDownState] = createSignal(false);
+  const [activityName, setActivityName] = createSignal("");
+  const [errorMessage, setErrorMessage] = createSignal("");
 
   const toggleDropDown = () => setDropDownState(!dropDownState());
 
@@ -12,7 +14,48 @@ function CreateActivity() {
   };
 
   document.addEventListener("click", handleClickOutside);
-  onCleanup(() => document.removeEventListener("click", handleClickOutside));
+  onCleanup(() => document.removeEventListener("click", handleClickOutside)); // Not listen anymore when cleanup
+
+  const checkEmpty = () => {
+    if (activityName().trim() === "") {
+      setErrorMessage("Activity name cannot be empty");
+      return;
+    } else setErrorMessage("");
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (errorMessage() !== "") return;
+    const newActivity = {
+      name: activityName(),
+      time: 0, // Assuming new activities start with 0 time
+    };
+
+    try {
+      const response = await fetch("http://localhost:8080/activities", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newActivity),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create activity");
+      }
+
+      const createdActivity = await response.json();
+
+      // Call the callback to update the activities list
+      onActivityCreated(createdActivity);
+
+      // Reset the form
+      setActivityName("");
+      setErrorMessage("");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div
@@ -50,7 +93,7 @@ function CreateActivity() {
         }}
       >
         <form
-          action=""
+          onSubmit={handleSubmit}
           style={{
             display: "flex",
             "flex-direction": "column",
@@ -60,6 +103,8 @@ function CreateActivity() {
           <input
             type="text"
             placeholder="Activity name"
+            value={activityName()}
+            onInput={(e) => setActivityName(e.target.value)}
             style={{
               width: "300px",
               height: "40px",
@@ -69,6 +114,7 @@ function CreateActivity() {
             }}
           />
           <button
+            onClick={checkEmpty}
             type="submit"
             style={{
               height: "40px",
@@ -83,6 +129,18 @@ function CreateActivity() {
             Submit
           </button>
         </form>
+        {errorMessage() && (
+          <div
+            style={{
+              color: "red",
+              "margin-top": "10px",
+              "font-size": "16px",
+              "text-align": "center",
+            }}
+          >
+            {errorMessage()}
+          </div>
+        )}
       </div>
     </div>
   );
