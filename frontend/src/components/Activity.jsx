@@ -6,7 +6,7 @@ import { convertSecondsToHMS } from "../ActivitiesStore";
 function Activity(props) {
   const { state, startActivity } = useContext(CurrentActivityContext);
 
-  const startTimer = () => startActivity(props.activityName);
+  const startTimer = () => startActivity(props.id, props.activityName);
 
   const { hours, minutes, seconds } = convertSecondsToHMS(props.time);
 
@@ -30,7 +30,7 @@ function Activity(props) {
           <strong>Total Time:</strong>
         </p>
         <p>
-          {hours}h - {minutes}m -{seconds}s
+          {hours}h - {minutes}m - {seconds}s
         </p>
       </div>
 

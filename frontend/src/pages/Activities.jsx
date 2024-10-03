@@ -57,7 +57,7 @@ function Activities() {
           gap: "8px",
           "flex-direction": "column",
           "overflow-y": "scroll",
-          "max-height": "calc(100vh - 200px)",
+          "max-height": "calc(100vh - 240px)",
           "scrollbar-width": "none",
           "-ms-overflow-style": "none",
         }}

@@ -84,6 +84,32 @@ func main() {
         return c.Status(201).JSON(activity)
     })
 
+    app.Patch("/activities/:id", func(c *fiber.Ctx) error {
+        id := c.Params("id")
+    
+        var input struct {
+            Time int `json:"time"`
+        }
+        if err := c.BodyParser(&input); err != nil {
+            return c.Status(400).SendString(err.Error())
+        }
+    
+        var currentTime int
+        err := db.QueryRow("SELECT time FROM activity WHERE id = ?", id).Scan(&currentTime)
+        if err != nil {
+            return c.Status(500).SendString(err.Error())
+        }
+    
+        newTime := currentTime + input.Time
+    
+        _, err = db.Exec("UPDATE activity SET time = ? WHERE id = ?", newTime, id)
+        if err != nil {
+            return c.Status(500).SendString(err.Error())
+        }
+    
+        return c.SendStatus(200)
+    })
+
     // Start Fiber app
     log.Fatal(app.Listen(":8080"))
 }

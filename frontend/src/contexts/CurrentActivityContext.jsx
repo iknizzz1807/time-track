@@ -2,12 +2,17 @@
 import { createContext } from "solid-js";
 import { onCleanup } from "solid-js";
 import { createStore } from "solid-js/store";
+import {
+  state as getActivityState,
+  setState as updateActivityState,
+} from "../ActivitiesStore";
 
 const CurrentActivityContext = createContext();
 export { CurrentActivityContext };
 
 export function CurrentActivityProvider(props) {
   const [state, setState] = createStore({
+    id: null,
     activityName: "",
     time: 0,
     isAnyRunning: false,
@@ -16,7 +21,8 @@ export function CurrentActivityProvider(props) {
 
   let timer;
 
-  const startActivity = (name) => {
+  const startActivity = (id, name) => {
+    setState("id", id);
     setState("activityName", name);
     setState("isAnyRunning", true);
     setState("isPausing", false);
@@ -25,12 +31,43 @@ export function CurrentActivityProvider(props) {
     }, 1000);
   };
 
-  const stopActivity = () => {
+  const stopActivity = async () => {
     clearInterval(timer);
-    setState("time", 0);
+    const { time, id } = state;
     setState("isPausing", false);
     setState("activityName", "");
     setState("isAnyRunning", false);
+
+    try {
+      const response = await fetch(`http://localhost:8080/activities/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ time }),
+      });
+
+      if (response.ok) {
+        // If response ok:
+        const activities = getActivityState.activities.map((activity) => ({
+          ...activity,
+        }));
+        let targetActivity = activities.find((activity) => activity.id === id);
+        if (targetActivity) {
+          targetActivity.time += time;
+        }
+        updateActivityState("activities", activities);
+      } else {
+        console.error(
+          "Failed to update activity on server:",
+          response.statusText
+        );
+      }
+    } catch (error) {
+      console.error("Failed to send PATCH request:", error);
+    }
+
+    setState("time", 0);
   };
 
   const pauseActivity = () => {
