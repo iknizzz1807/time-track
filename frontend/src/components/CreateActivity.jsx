@@ -1,3 +1,4 @@
+// CreateActivity
 import { createSignal, onCleanup } from "solid-js";
 
 function CreateActivity({ onActivityCreated }) {
@@ -53,7 +54,11 @@ function CreateActivity({ onActivityCreated }) {
       setActivityName("");
       setErrorMessage("");
     } catch (error) {
-      console.error(error);
+      if (error.name === "TypeError") {
+        setErrorMessage("Network error or server is not available");
+      } else {
+        setErrorMessage(error.message);
+      }
     }
   };
 

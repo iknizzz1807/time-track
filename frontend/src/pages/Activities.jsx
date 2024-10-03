@@ -1,62 +1,33 @@
+//Activities.jsx
 import Activity from "../components/Activity";
 import CreateActivity from "../components/CreateActivity";
 import { For } from "solid-js/web";
-import { createSignal } from "solid-js";
-import { createResource } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 
-const fetchActivities = async () => {
-  const response = await fetch("http://localhost:8080/activities");
-  if (!response.ok) {
-    throw new Error("Failed to fetch activities");
-  }
-  const data = await response.json();
-  return data.map((activity) => {
-    const { hours, minutes, seconds } = convertSecondsToHMS(activity.time);
-    return {
-      id: activity.id,
-      name: activity.name,
-      totalTimeHour: hours,
-      totalTimeMinute: minutes,
-      totalTimeSecond: seconds,
-    };
-  });
-};
-
-const convertSecondsToHMS = (totalSeconds) => {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = (totalSeconds % 3600) % 60;
-  return { hours, minutes, seconds };
-};
+import { state, setState, fetchActivities } from "../ActivitiesStore";
 
 function Activities() {
-  const [activities, { mutate }] = createResource(fetchActivities);
-  // Simulate the list of activities
-  const [runningTimerId, setRunningTimerId] = createSignal(null);
-  const isAnyTimerRunning = () => runningTimerId() !== null;
   let activitiesContainerRef;
 
-  const handleTimerStart = (id) => {
-    setRunningTimerId(id);
-  };
-
-  const handleTimerStop = () => {
-    setRunningTimerId(null);
-  };
+  onMount(() => {
+    if (!state.isFetched) {
+      fetchActivities();
+    }
+  });
 
   const handleActivityCreated = (newActivity) => {
-    const { hours, minutes, seconds } = convertSecondsToHMS(newActivity.time);
     const formattedActivity = {
       id: newActivity.id,
       name: newActivity.name,
-      totalTimeHour: hours,
-      totalTimeMinute: minutes,
-      totalTimeSecond: seconds,
+      time: newActivity.time,
     };
-    mutate((prev) => [...prev, formattedActivity]);
+    setState("activities", (prev) => [...prev, formattedActivity]);
+
     // Scroll to the bottom of the activities container
     setTimeout(() => {
-      activitiesContainerRef.scrollTop = activitiesContainerRef.scrollHeight;
+      if (activitiesContainerRef) {
+        activitiesContainerRef.scrollTop = activitiesContainerRef.scrollHeight;
+      }
     }, 0);
   };
 
@@ -80,7 +51,7 @@ function Activities() {
         <CreateActivity onActivityCreated={handleActivityCreated} />
       </div>
       <div
-        ref={activitiesContainerRef}
+        ref={(el) => (activitiesContainerRef = el)}
         style={{
           display: "flex",
           gap: "8px",
@@ -91,18 +62,9 @@ function Activities() {
           "-ms-overflow-style": "none",
         }}
       >
-        <For each={activities()}>
+        <For each={state.activities}>
           {(item) => (
-            <Activity
-              id={item.id}
-              activityName={item.name}
-              totalTimeHour={item.totalTimeHour}
-              totalTimeMinute={item.totalTimeMinute}
-              totalTimeSecond={item.totalTimeSecond}
-              isAnyTimerRunning={isAnyTimerRunning}
-              onTimerStart={() => handleTimerStart(item.id)}
-              onTimerStop={handleTimerStop}
-            />
+            <Activity id={item.id} activityName={item.name} time={item.time} />
           )}
         </For>
       </div>

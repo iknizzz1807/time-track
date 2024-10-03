@@ -1,43 +1,14 @@
-import { createSignal, onCleanup } from "solid-js";
+// Activity.jsx
+import { CurrentActivityContext } from "../contexts/CurrentActivityContext";
+import { useContext } from "solid-js";
+import { convertSecondsToHMS } from "../ActivitiesStore";
 
 function Activity(props) {
-  const [seconds, setSeconds] = createSignal(0);
-  const [isActive, setIsActive] = createSignal(false);
+  const { state, startActivity } = useContext(CurrentActivityContext);
 
-  let interval;
+  const startTimer = () => startActivity(props.activityName);
 
-  const startTimer = () => {
-    if (!isActive() && !props.isAnyTimerRunning()) {
-      setIsActive(true);
-      props.onTimerStart(props.id);
-      interval = setInterval(() => {
-        setSeconds((prev) => prev + 1);
-      }, 1000);
-    }
-  };
-
-  const stopTimer = () => {
-    setIsActive(false);
-    props.onTimerStop();
-    setSeconds(0);
-    clearInterval(interval);
-  };
-
-  onCleanup(() => {
-    clearInterval(interval);
-    if (isActive()) {
-      props.onTimerStop();
-    }
-  });
-
-  const formatTime = (seconds) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h.toString().padStart(2, "0")}:${m
-      .toString()
-      .padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  };
+  const { hours, minutes, seconds } = convertSecondsToHMS(props.time);
 
   return (
     <div
@@ -59,8 +30,7 @@ function Activity(props) {
           <strong>Total Time:</strong>
         </p>
         <p>
-          {props.totalTimeHour}h - {props.totalTimeMinute}m -
-          {props.totalTimeSecond}s
+          {hours}h - {minutes}m -{seconds}s
         </p>
       </div>
 
@@ -72,9 +42,6 @@ function Activity(props) {
           "align-items": "center",
         }}
       >
-        <div>
-          <p style={{ "font-size": "20px" }}>{formatTime(seconds())}</p>
-        </div>
         <div
           style={{ display: "flex", "flex-direction": "column", gap: "10px" }}
         >
@@ -82,24 +49,13 @@ function Activity(props) {
             style={{
               "font-size": "20px",
               "background-color": "lightgreen",
-              cursor:
-                isActive() || props.isAnyTimerRunning() ? "default" : "pointer",
+              // cursor:
+              //   isActive() || props.isAnyTimerRunning() ? "default" : "pointer",
             }}
             onClick={startTimer}
-            disabled={isActive() || props.isAnyTimerRunning()}
+            disabled={state.isAnyRunning}
           >
             Start
-          </button>
-          <button
-            style={{
-              "font-size": "20px",
-              "background-color": "lightcoral",
-              cursor: !isActive() ? "default" : "pointer",
-            }}
-            onClick={stopTimer}
-            disabled={!isActive()}
-          >
-            Stop
           </button>
         </div>
       </div>
