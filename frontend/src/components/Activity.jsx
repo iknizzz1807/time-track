@@ -1,12 +1,23 @@
 // Activity.jsx
 import { CurrentActivityContext } from "../contexts/CurrentActivityContext";
-import { useContext } from "solid-js";
-import { convertSecondsToHMS } from "../ActivitiesStore";
+import { createSignal, useContext } from "solid-js";
+import { convertSecondsToHMS, deleteActivity } from "../ActivitiesStore";
+import ConfirmPopup from "./ConfirmPopup";
 
 function Activity(props) {
   const { state, startActivity } = useContext(CurrentActivityContext);
+  const [showConfirm, setShowConfirm] = createSignal(false);
 
   const startTimer = () => startActivity(props.id, props.activityName);
+
+  const confirmDelete = () => setShowConfirm(true);
+
+  const handleConfirmDelete = async () => {
+    await deleteActivity(props.id);
+    setShowConfirm(false);
+  };
+
+  const handleCancelDelete = () => setShowConfirm(false);
 
   const { hours, minutes, seconds } = convertSecondsToHMS(props.time);
 
@@ -57,8 +68,28 @@ function Activity(props) {
           >
             Start
           </button>
+          <button
+            style={{
+              "font-size": "20px",
+              "background-color": "salmon",
+              // cursor:
+              //   isActive() || props.isAnyTimerRunning() ? "default" : "pointer",
+            }}
+            onClick={confirmDelete}
+            // disabled={state.isAnyRunning}
+          >
+            Delete
+          </button>
         </div>
       </div>
+
+      {showConfirm() && (
+        <ConfirmPopup
+          message="Are you sure you want to delete this activity?"
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+      )}
     </div>
   );
 }

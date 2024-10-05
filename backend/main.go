@@ -110,6 +110,26 @@ func main() {
         return c.SendStatus(200)
     })
 
+    app.Delete("/activities/:id", func(c *fiber.Ctx) error {
+        id := c.Params("id")
+    
+        result, err := db.Exec("DELETE FROM activity WHERE id = ?", id)
+        if err != nil {
+            return c.Status(500).SendString(err.Error())
+        }
+    
+        rowsAffected, err := result.RowsAffected()
+        if err != nil {
+            return c.Status(500).SendString(err.Error())
+        }
+    
+        if rowsAffected == 0 {
+            return c.Status(404).SendString("Activity not found")
+        }
+    
+        return c.SendStatus(200)
+    })
+
     // Start Fiber app
     log.Fatal(app.Listen(":8080"))
 }

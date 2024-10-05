@@ -27,6 +27,21 @@ const fetchActivities = async () => {
   }
 };
 
+const deleteActivity = async (id) => {
+  try {
+    const response = await fetch(`http://localhost:8080/activities/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete activity");
+
+    setState("activities", (activities) =>
+      activities.filter((activity) => activity.id !== id)
+    );
+  } catch (error) {
+    console.error(error.message);
+  }
+};
+
 const convertSecondsToHMS = (totalSeconds) => {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -34,4 +49,10 @@ const convertSecondsToHMS = (totalSeconds) => {
   return { hours, minutes, seconds };
 };
 
-export { state, setState, fetchActivities, convertSecondsToHMS };
+export {
+  state,
+  setState,
+  fetchActivities,
+  convertSecondsToHMS,
+  deleteActivity,
+};
