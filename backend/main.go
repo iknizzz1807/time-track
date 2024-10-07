@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -29,6 +30,19 @@ func main() {
         name TEXT,
         time INTEGER
     )`)
+
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    _, err = db.Exec(`CREATE TABLE IF NOT EXISTS tracks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        activity_id INTEGER,
+        time INTEGER,
+        date TEXT,
+        FOREIGN KEY (activity_id) REFERENCES activity(id) ON DELETE CASCADE
+    )`)
+
     if err != nil {
         log.Fatal(err)
     }
@@ -106,6 +120,12 @@ func main() {
         if err != nil {
             return c.Status(500).SendString(err.Error())
         }
+
+        // Insert a new track record
+        _, err = db.Exec("INSERT INTO tracks (activity_id, time, date) VALUES (?, ?, ?)", id, input.Time, time.Now())
+        if err != nil {
+            return c.Status(500).SendString(err.Error())
+        }
     
         return c.SendStatus(200)
     })
@@ -128,6 +148,46 @@ func main() {
         }
     
         return c.SendStatus(200)
+    })
+
+    app.Get("/tracks", func(c *fiber.Ctx) error {
+        rows, err := db.Query(`
+            SELECT tracks.id, tracks.activity_id, tracks.time, tracks.date, activity.name
+            FROM tracks
+            JOIN activity ON tracks.activity_id = activity.id
+        `)
+        if err != nil {
+            return c.Status(500).SendString(err.Error())
+        }
+        defer rows.Close()
+    
+        var tracks []struct {
+            ID         int    `json:"id"`
+            ActivityID int    `json:"activity_id"`
+            Time       int    `json:"time"`
+            Date       string `json:"date"`
+            Name       string `json:"name"`
+        }
+    
+        for rows.Next() {
+            var track struct {
+                ID         int    `json:"id"`
+                ActivityID int    `json:"activity_id"`
+                Time       int    `json:"time"`
+                Date       string `json:"date"`
+                Name       string `json:"name"`
+            }
+            if err := rows.Scan(&track.ID, &track.ActivityID, &track.Time, &track.Date, &track.Name); err != nil {
+                return c.Status(500).SendString(err.Error())
+            }
+            tracks = append(tracks, track)
+        }
+    
+        if err := rows.Err(); err != nil {
+            return c.Status(500).SendString(err.Error())
+        }
+    
+        return c.JSON(tracks)
     })
 
     // Start Fiber app
