@@ -1,4 +1,4 @@
-//CurrentActivity.jsx
+// CurrentActivity.jsx
 import { createContext } from "solid-js";
 import { onCleanup } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -19,20 +19,28 @@ export function CurrentActivityProvider(props) {
     isPausing: false,
   });
 
-  let timer;
+  let timerWorker;
 
   const startActivity = (id, name) => {
     setState("id", id);
     setState("activityName", name);
     setState("isAnyRunning", true);
     setState("isPausing", false);
-    timer = setInterval(() => {
-      setState("time", (time) => time + 1);
-    }, 1000);
+
+    // Khởi động Web Worker và gửi yêu cầu bắt đầu.
+    timerWorker = new Worker(new URL("../timerWorker.js", import.meta.url));
+    timerWorker.postMessage({ action: "start", payload: { time: state.time } });
+
+    // Lắng nghe sự kiện cập nhật thời gian từ worker.
+    timerWorker.onmessage = (e) => {
+      setState("time", e.data);
+    };
   };
 
   const stopActivity = async () => {
-    clearInterval(timer);
+    timerWorker.postMessage({ action: "stop" });
+    timerWorker.terminate(); // Kết thúc worker.
+
     const { time, id } = state;
     setState("isPausing", false);
     setState("activityName", "");
@@ -48,7 +56,6 @@ export function CurrentActivityProvider(props) {
       });
 
       if (response.ok) {
-        // If response ok:
         const activities = getActivityState.activities.map((activity) => ({
           ...activity,
         }));
@@ -72,18 +79,18 @@ export function CurrentActivityProvider(props) {
 
   const pauseActivity = () => {
     setState("isPausing", true);
-    clearInterval(timer);
+    timerWorker.postMessage({ action: "pause" });
   };
 
   const resumeActivity = () => {
     setState("isPausing", false);
-    timer = setInterval(() => {
-      setState("time", (time) => time + 1);
-    }, 1000);
+    timerWorker.postMessage({ action: "start", payload: { time: state.time } });
   };
 
   onCleanup(() => {
-    clearInterval(timer);
+    if (timerWorker) {
+      timerWorker.terminate(); // Hủy worker khi component bị hủy.
+    }
   });
 
   const store = {
