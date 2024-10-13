@@ -1,9 +1,9 @@
 @echo off
 
 :: Chạy backend trong nền
-start /b cmd /c "cd /d D:\Coding\Solidjs\time-track\backend && go run main.go"
+start /b cmd /c "cd /d backend && go run main.go"
 
 :: Chạy frontend trong nền
-start /b cmd /c "cd /d D:\Coding\Solidjs\time-track\frontend && npm run dev"
+start /b cmd /c "cd /d frontend && npm run dev"
 
 pause
